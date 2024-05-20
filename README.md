@@ -27,7 +27,7 @@ The project is organized into the following packages:
    git clone https://github.com/Luca-De-Maio/java-selenium-framework.git
 2. Navigate to the project directory:
     ```sh
-    cd selenium-pageobjectmodel
+    cd selenium-java-framework
 3. Install dependencies:
     ```sh
     mvn clean install
