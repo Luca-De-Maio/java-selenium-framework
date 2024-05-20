@@ -1,0 +1,11 @@
+ {
+    "cardNumber": "4012888888881881",
+    "expirationDate": "12/25",
+    "cvv": "123",
+    "nameOnCard": "John Doe",
+    "billingAddress": "123 Main St, Anytown, USA",
+    "country": "Argentina",
+    "zipCode": "1425",
+    "currency": "USD",
+    "phoneNumber": "0858742646"
+ }
