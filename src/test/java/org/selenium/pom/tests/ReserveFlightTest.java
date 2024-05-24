@@ -3,6 +3,7 @@ package org.selenium.pom.tests;
 import org.selenium.pom.base.BaseTest;
 import org.selenium.pom.objects.PaymentDetails;
 import org.selenium.pom.pages.*;
+import org.selenium.pom.utils.ConfigLoader;
 import org.selenium.pom.utils.JacksonUtils;
 import org.testng.annotations.Test;
 
@@ -18,10 +19,13 @@ public class ReserveFlightTest extends BaseTest {
         PaymentDetails paymentDetails = JacksonUtils.deserializeJson("paymentDetails.json", PaymentDetails.class);
 
 
-        LoginPage loginPage = new HomePage(getDriver()).load()
+        LoginPage loginPage = new HomePage(getDriver()).load().acceptCookies()
                 .getMyHeader().clickOnLoginLink();
 
-        HomePage homePage = loginPage.enterUsername("demaio.martin@gmail.com").enterPassword("Lucatesting27").clickLoginButton();
+        HomePage homePage = loginPage
+                .enterUsername(ConfigLoader.getInstance().getUsername())
+                .enterPassword(ConfigLoader.getInstance().getPassword())
+                .clickLoginButton();
 
         FlightsPage flightsPage = homePage.getBookingSelector()
                 .selectDeparture("Spain", "Valencia")
@@ -55,7 +59,7 @@ public class ReserveFlightTest extends BaseTest {
                                 paymentDetails.getZipCode()
                         );
         reviewAndPayPage.acceptTermsAndConditionsAndPay();
-        //the assert
+
         assertTrue(reviewAndPayPage.acceptTermsAndConditionsAndPay());
     }
 

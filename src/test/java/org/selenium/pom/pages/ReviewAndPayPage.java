@@ -29,11 +29,9 @@ public class ReviewAndPayPage extends BasePage {
 
 
     private final Faker faker = new Faker();
-    private final Actions actions;
 
     public ReviewAndPayPage(WebDriver driver) {
         super(driver);
-        this.actions = new Actions(driver);
     }
 
     public ReviewAndPayPage fillPhoneNumberField(String phoneNumber) {
@@ -80,15 +78,15 @@ public class ReviewAndPayPage extends BasePage {
                                 String cardHolderName, String address, String country, String zipcode) {
         scrollToMiddleOfPage();
         enterCardExpiryDate(cardExpiryDate);
-        switchToCardNumberIframe();
-        enterCardNumber(generateValidVisaCardNumber());
-        switchToDefaultContent();
         enterCVV(cvv);
         enterCardholderName(cardHolderName);
         enterAddressLine1(address);
         selectCountry(country);
         enterCity(faker.country().capital());
         enterPostcode(zipcode);
+        switchToCardNumberIframe();
+        enterCardNumber(generateValidVisaCardNumber());
+        switchToDefaultContent();
         selectCurrencyUSD();
     }
 
@@ -118,6 +116,21 @@ public class ReviewAndPayPage extends BasePage {
     }
 
     public String generateValidVisaCardNumber() {
-        return faker.finance().creditCard(com.github.javafaker.CreditCardType.VISA);
+        String cardNumber;
+        do {
+            cardNumber = faker.finance().creditCard(com.github.javafaker.CreditCardType.VISA);
+        } while (!isValidVisaCardNumber(cardNumber));
+        return formatCardNumber(cardNumber);
+    }
+
+    // Validate that the card number has 16 digits
+    private boolean isValidVisaCardNumber(String cardNumber) {
+        String cleaned = cardNumber.replaceAll("\\D", "");
+        return cleaned.length() == 16;
+    }
+
+    // Format the card number with spaces
+    private String formatCardNumber(String cardNumber) {
+        return cardNumber.replaceAll("\\D", "").replaceAll("(.{4})", "$1 ").trim();
     }
 }

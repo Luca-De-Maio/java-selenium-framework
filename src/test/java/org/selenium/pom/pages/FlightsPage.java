@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.selenium.pom.base.BasePage;
+import org.selenium.pom.utils.ActionUtils;
 
 import java.util.List;
 
@@ -19,31 +20,30 @@ public class FlightsPage extends BasePage {
     private final By lastName = By.cssSelector("[autocomplete='family-name']");
     private final By spinnerOverlay = By.cssSelector("flights-passengers div.spinner__icon");
     private final By continueButton = By.cssSelector("button.continue-flow__button");
-    private final Actions actions = new Actions(driver);
+    private final ActionUtils actionUtils;
 
     public FlightsPage(WebDriver driver) {
         super(driver);
+        this.actionUtils = super.actionUtils;
     }
 
-    public boolean isOutboundFlightSelected(){
+    public boolean isOutboundFlightSelected() {
         scrollIntoValidDate("outbound");
-
-        return driver.findElement(outboundTickContainer).isEnabled();
+        return actionUtils.waitForVisibility(outboundTickContainer).isEnabled();
     }
 
-    public boolean isInboundFlightSelected(){
+    public boolean isInboundFlightSelected() {
         scrollIntoValidDate("inbound");
-
-        return driver.findElement(bothFlightSelected).isEnabled();
+        return actionUtils.waitForVisibility(bothFlightSelected).isEnabled();
     }
 
     public String selectFare() {
         waitForOverlaysToDisappear(spinnerOverlay);
-        wait.until(visibilityOfElementLocated(plusFareSelector)).click();
-        return driver.findElement(fareTitle).getText().trim();
+        actionUtils.click(plusFareSelector);
+        return actionUtils.getText(fareTitle).trim();
     }
 
-    private void scrollIntoValidDate(String type){
+    private void scrollIntoValidDate(String type) {
         int maxAttempts = 5;
         wait.until(invisibilityOf(driver.findElement(By.cssSelector("div.spinner__icon"))));
         boolean buttonClicked = false;
@@ -65,12 +65,20 @@ public class FlightsPage extends BasePage {
             dateItemPrice.click();
             WebElement selectButton = driver.findElement(By.cssSelector("[data-e2e=\"flight-card--" + type + "\"] button.ry-button--gradient-blue:not([disabled])"));
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior: 'auto', block: 'center', inline: 'center'});", selectButton);
-            if (selectButton.isEnabled()) {
-                System.out.println("Button clicked successfully");
-                selectButton.click();
-                return true;
-            } else {
-                throw new NoSuchElementException("Button flight Selector not found");
+            try {
+                if (selectButton.isEnabled()) {
+                    System.out.println("Button clicked successfully");
+                    selectButton.click();
+                    return true;
+                } else {
+                    throw new NoSuchElementException("Button flight Selector not found");
+                }
+            } catch (StaleElementReferenceException e) {
+                selectButton = driver.findElement(By.cssSelector("[data-e2e=\"flight-card--" + type + "\"] button.ry-button--gradient-blue:not([disabled])"));
+                if (selectButton.isEnabled()) {
+                    selectButton.click();
+                    return true;
+                }
             }
         }
         return false;
@@ -78,20 +86,16 @@ public class FlightsPage extends BasePage {
 
 
     private void handleExceptionAndClickNextDate(String type, int attempt) {
-        WebElement nextDateCarousel = driver.findElement(By.cssSelector("[data-ref=\"" + type + "\"] .carousel-next carousel-arrow"));
-        System.out.println("Attempt " + attempt + ": NoSuchElementException occurred");
-        wait.until(elementToBeClickable(nextDateCarousel));
-        System.out.println("Clicking on next days carousel, attempt: " + attempt);
-        nextDateCarousel.click();
+        LOGGER.info("Attempt " + attempt + ": NoSuchElementException occurred");
+        actionUtils.click(By.cssSelector("[data-ref=\"" + type + "\"] .carousel-next carousel-arrow"));
+        LOGGER.info("Clicking on next days carousel, attempt: " + attempt);
     }
 
     public FlightsPage fillAllPassengersInformation() {
-        Actions actions = new Actions(driver);
-
         actionUtils.scrollToElement(continueButton);
 
         waitForOverlaysToDisappear(spinnerOverlay);
-        wait.until(visibilityOfElementLocated(passengerModal));
+        actionUtils.waitForVisibility(passengerModal);
 
         List<WebElement> passengers = driver.findElements(By.tagName("pax-passenger-container"));
         System.out.println(passengers.size());
@@ -122,7 +126,7 @@ public class FlightsPage extends BasePage {
 
             List<WebElement> dropdownItems = driver.findElements(By.cssSelector(".dropdown__menu .dropdown-item__link"));
             for (WebElement dropdownItem : dropdownItems) {
-                wait.until(visibilityOf(dropdownItem.findElement(By.cssSelector(".dropdown-item__label"))));
+                actionUtils.waitForVisibility(By.cssSelector(".dropdown-item__label"));
                 String labelText = dropdownItem.findElement(By.cssSelector(".dropdown-item__label")).getText().trim();
                 if (labelText.equals("Mr")) {
                     dropdownItem.click();
@@ -130,14 +134,14 @@ public class FlightsPage extends BasePage {
                 }
             }
         }
-        wait.until(elementToBeClickable(firstName)).sendKeys(name);
-        wait.until(elementToBeClickable(lastName)).sendKeys(lastname);
+        actionUtils.enterText(firstName, name);
+        actionUtils.enterText(lastName, lastname);
 
         System.out.println("Adding to: " + name + ' ' + lastname + " as passenger ");
     }
 
     public SeatPage continueToSeatSelectionButton() {
-        driver.findElement(continueButton).click();
+        actionUtils.click(continueButton);
         return new SeatPage(driver);
     }
 }

@@ -28,8 +28,12 @@ public class HomePage extends BasePage {
 
     public HomePage load(){
         load("/");
-        wait.until(ExpectedConditions.elementToBeClickable(alertCookies));
-        driver.findElement(By.cssSelector("#cookie-popup-with-overlay button[data-ref=\"cookie.accept-all\"")).click();
         return this;
     }
+
+    public HomePage acceptCookies() {
+        actionUtils.click(alertCookies);
+        return this;
+    }
+
 }
